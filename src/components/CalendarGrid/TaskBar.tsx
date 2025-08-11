@@ -1,4 +1,4 @@
-import React, { useRef } from 'react'
+import React, { useRef, useState } from 'react'
 import { Task } from '../../types/taskTypes'
 import { useDraggable } from '@dnd-kit/core'
 import { parseISO, differenceInCalendarDays, addDays, format } from 'date-fns'
@@ -10,22 +10,36 @@ type Props = {
   onResize: (id:string, newStart:string, newEnd:string) => void
   onMove: (id:string, newStart:string) => void
   openEdit: (t: Task) => void
+  allTasksForDate?: Task[] // All tasks for this specific date
 }
 
 function ymd(d: Date){ return format(d, 'yyyy-MM-dd') }
 
-export default function TaskBar({ task, gridStartDate, dayWidth, onResize, onMove, openEdit }: Props){
+export default function TaskBar({ task, gridStartDate, dayWidth, onResize, onMove, openEdit, allTasksForDate = [] }: Props){
+  const [showTooltip, setShowTooltip] = useState(false)
   const start = parseISO(task.startDate)
-  const end = parseISO(task.endDate)
-  const offsetDays = differenceInCalendarDays(start, gridStartDate)
-  const duration = differenceInCalendarDays(end, start) + 1
+  const end = parseISO(task.startDate)
+  
+  // Calculate duration for width
+  const duration = differenceInCalendarDays(parseISO(task.endDate), start) + 1
+  
+  // Calculate width based on duration
+  const widthPx = Math.max(duration * dayWidth - 10, dayWidth * 0.8)
+  
+  // Constrain the width to prevent overflow
+  const maxWidth = Math.min(widthPx, (7 * dayWidth) - 10) // Max 7 days width
+  const constrainedWidth = Math.max(maxWidth, dayWidth * 0.8) // Ensure minimum width
 
-  const leftPx = offsetDays * dayWidth + 10 // margin
-  const widthPx = Math.max(duration * dayWidth - 18, dayWidth * 0.6) // ensure min width
-
-  const {attributes, listeners, setNodeRef, transform, isDragging} = useDraggable({ id: task.id, data: {task} })
+  const {attributes, listeners, setNodeRef, transform, isDragging} = useDraggable({ 
+    id: task.id, 
+    data: {task} 
+  })
 
   const ref = useRef<HTMLDivElement|null>(null)
+
+  // Check if there are multiple tasks for this date
+  const hasMultipleTasks = allTasksForDate.length > 1
+  const taskCount = allTasksForDate.length
 
   // left resize
   function startResizeLeft(e: React.PointerEvent){
@@ -59,19 +73,48 @@ export default function TaskBar({ task, gridStartDate, dayWidth, onResize, onMov
     window.addEventListener('pointerup', onPointerUp)
   }
 
-  // drop-based move: on drag end we compute offset from pointer location -> new start
-  // dnd-kit parent should handle finalization. For simplicity, allow double-click to open edit.
-  return <div
-    ref={setNodeRef as any}
-    className={`task-bar ${task.category === 'To Do' ? 'cat-todo' : task.category === 'In Progress' ? 'cat-progress' : task.category === 'Review' ? 'cat-review' : 'cat-completed'}`}
-    style={{ left: leftPx, width: widthPx }}
-    title={`${task.name} (${task.startDate} → ${task.endDate})`}
-    onDoubleClick={()=>openEdit(task)}
-    {...listeners}
-    {...attributes}
-  >
-    <div className="task-left-handle" onPointerDown={startResizeLeft} />
-    <div style={{padding:'0 8px', overflow:'hidden', textOverflow:'ellipsis'}}>{task.name}</div>
-    <div className="task-right-handle" onPointerDown={startResizeRight} />
-  </div>
+  const style = {
+    width: constrainedWidth,
+    transform: transform ? `translate3d(${transform.x}px, ${transform.y}px, 0)` : undefined,
+    opacity: isDragging ? 0.5 : 1,
+    zIndex: isDragging ? 1000 : 1
+  }
+
+  return (
+    <div
+      ref={setNodeRef as any}
+      className={`task-bar ${task.category === 'To Do' ? 'cat-todo' : task.category === 'In Progress' ? 'cat-progress' : task.category === 'Review' ? 'cat-review' : 'cat-completed'}`}
+      style={style}
+      title={`${task.name} (${task.startDate} → ${task.endDate})`}
+      onDoubleClick={()=>openEdit(task)}
+      onMouseEnter={() => setShowTooltip(true)}
+      onMouseLeave={() => setShowTooltip(false)}
+      {...listeners}
+      {...attributes}
+    >
+      <div className="task-left-handle" onPointerDown={startResizeLeft} />
+      <div style={{padding:'0 8px', overflow:'hidden', textOverflow:'ellipsis', flex: 1}}>
+        {task.name}
+        {hasMultipleTasks && (
+          <span className="task-count"> +{taskCount - 1}</span>
+        )}
+      </div>
+      <div className="task-right-handle" onPointerDown={startResizeRight} />
+      
+      {/* Tooltip showing all tasks for this date */}
+      {showTooltip && hasMultipleTasks && (
+        <div className="task-tooltip">
+          <div className="tooltip-header">Tasks for {format(start, 'MMM d')}:</div>
+          {allTasksForDate.map((t, index) => (
+            <div key={t.id} className="tooltip-task" onClick={() => openEdit(t)}>
+              <span className="tooltip-task-name">{t.name}</span>
+              <span className={`tooltip-task-category ${t.category === 'To Do' ? 'cat-todo' : t.category === 'In Progress' ? 'cat-progress' : t.category === 'Review' ? 'cat-review' : 'cat-completed'}`}>
+                {t.category}
+              </span>
+            </div>
+          ))}
+        </div>
+      )}
+    </div>
+  )
 }

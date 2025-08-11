@@ -32,13 +32,26 @@ export const TaskProvider: React.FC<{children:any}> = ({ children }) => {
   const [tasks, setTasks] = useState<Task[]>(() => {
     try {
       const raw = localStorage.getItem(LS_KEY)
-      return raw ? JSON.parse(raw) : []
+      if (raw) {
+        const savedTasks = JSON.parse(raw)
+        return savedTasks
+      }
+      return [] // Start with empty list, no demo data
     } catch {
-      return []
+      return [] // Start with empty list on error
     }
   })
   const [filters, setFilters] = useState<Filters>({ categories: [], weeksWindow: 0 as any })
   const [search, setSearch] = useState('')
+
+  // Clear any existing demo data on first load
+  useEffect(() => {
+    const hasDemoData = tasks.some(task => task.id.startsWith('demo-'))
+    if (hasDemoData) {
+      setTasks([])
+      localStorage.removeItem(LS_KEY)
+    }
+  }, [])
 
   useEffect(() => {
     localStorage.setItem(LS_KEY, JSON.stringify(tasks))
