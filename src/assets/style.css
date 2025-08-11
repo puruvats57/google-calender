@@ -1,0 +1,139 @@
+.app {
+  display: flex;
+  gap: 18px;
+  align-items: flex-start;
+}
+
+/* Left: Filter & search */
+.sidebar {
+  width: 320px;
+  background: white;
+  border-radius: 12px;
+  padding: 16px;
+  box-shadow: 0 2px 10px rgba(20,30,40,0.05);
+  height: 760px;
+  overflow: auto;
+}
+
+/* Right: Calendar */
+.calendar {
+  flex: 1;
+  background: white;
+  border-radius: 16px;
+  padding: 20px;
+  box-shadow: 0 6px 30px rgba(14,28,45,0.06);
+}
+
+/* Month header */
+.month-header {
+  display:flex;
+  justify-content:space-between;
+  align-items:center;
+  margin-bottom: 12px;
+}
+.month-title{font-size:20px; font-weight:600}
+.controls{display:flex;gap:8px;align-items:center}
+
+/* Grid */
+.grid {
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+  gap: 0;
+  border-top: 1px solid var(--tile-border);
+  border-left: 1px solid var(--tile-border);
+}
+
+.cell {
+  min-height: 110px;
+  border-right: 1px solid var(--tile-border);
+  border-bottom: 1px solid var(--tile-border);
+  padding: 10px;
+  position: relative;
+  background: white;
+}
+
+.day-number {
+  position: absolute;
+  top: 8px;
+  left: 10px;
+  font-size: 13px;
+  color: #222;
+  opacity: 0.85;
+  font-weight: 600;
+}
+
+/* Task container aligns horizontally across cells using absolute positioning */
+.tasks-layer {
+  position: relative;
+  margin-top: 26px;
+}
+
+/* Task bar */
+.task-bar {
+  height: 28px;
+  border-radius: 14px;
+  padding: 4px 12px;
+  display: inline-flex;
+  align-items: center;
+  color: white;
+  font-weight: 700;
+  font-size: 12px;
+  cursor: grab;
+  box-shadow: 0 3px 8px rgba(9, 116, 186, 0.12);
+  user-select: none;
+  position: absolute;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.task-left-handle,
+.task-right-handle{
+  position: absolute;
+  top:0;
+  width: 8px;
+  height: 100%;
+  cursor: ew-resize;
+  z-index:4;
+}
+.task-left-handle{ left: -6px; }
+.task-right-handle{ right: -6px; }
+
+/* category colors */
+.cat-todo{ background: linear-gradient(180deg,#09b0f0,#049adf); }
+.cat-progress{ background: linear-gradient(180deg,#6ad2ff,#2bb7f9); }
+.cat-review{ background: linear-gradient(180deg,#7be26a,#46cc3f); }
+.cat-completed{ background: linear-gradient(180deg,#a1a1a1,#6f6f6f); }
+
+/* faint day highlight when selecting */
+.day-selecting { background: rgba(6,161,234,0.06); }
+
+/* modal */
+.modal-backdrop{
+  position: fixed; inset:0; background: rgba(10,20,30,0.35);
+  display:flex; justify-content:center; align-items:center;
+}
+.modal{
+  width: 420px; background:white; border-radius:10px; padding:14px;
+}
+.form-row{ margin-bottom: 10px; display:flex; flex-direction:column; gap:6px}
+input[type=text], select{
+  padding:8px 10px; border-radius:8px; border:1px solid #e5eef5;
+}
+
+/* filter list */
+.filter-section{ margin-bottom:16px }
+.filter-section h4{ margin:0 0 8px 0; font-size:14px }
+
+/* search */
+.search{ margin-bottom: 12px; }
+.search input{ width:100%; padding:8px 12px; border-radius:12px; border:1px solid #e9f1f7;}
+
+/* small dot for single-day event (like screenshot blue circle) */
+.dot-event{
+  width:26px;height:26px;border-radius:50%;
+  background:var(--blue);display:inline-block;color:white;
+  display:flex;align-items:center;justify-content:center;font-weight:700;
+  position:absolute; right:12px; top:30px;
+  box-shadow: 0 3px 8px rgba(9,116,186,0.12);
+}
